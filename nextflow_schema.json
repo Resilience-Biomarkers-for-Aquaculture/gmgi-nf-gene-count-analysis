@@ -5,14 +5,21 @@
     "properties": {
         "gene_counts": {
             "type": "string",
+            "format": "file-path",
+            "exists": true,
             "description": "Path to the gene count matrix file (S3 or local path)."
         },
         "metadata": {
             "type": "string",
+            "format": "file-path",
+            "mimetype": "text/csv",
+            "pattern": "^\\S+\\.csv$",
+            "exists": true,
             "description": "Path to the metadata file (S3 or local path)."
         },
         "output_dir": {
             "type": "string",
+            "format": "file-path",
             "description": "Directory to save output files (S3 or local path)."
         },
         "low_expression_threshold": {
