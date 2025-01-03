@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Nextflow Pipeline Parameters",
+    "type": "object",
+    "properties": {
+        "gene_counts": {
+            "type": "string",
+            "description": "Path to the gene count matrix file (S3 or local path)."
+        },
+        "metadata": {
+            "type": "string",
+            "description": "Path to the metadata file (S3 or local path)."
+        },
+        "output_dir": {
+            "type": "string",
+            "description": "Directory to save output files (S3 or local path)."
+        },
+        "low_expression_threshold": {
+            "type": "integer",
+            "description": "Threshold for filtering low-expression genes.",
+            "default": 10,
+            "minimum": 1
+        },
+        "n_repeats": {
+            "type": "integer",
+            "description": "Number of repetitions for mutual information calculation.",
+            "default": 10,
+            "minimum": 1
+        }
+    },
+    "required": ["gene_counts", "metadata", "output_dir"],
+    "additionalProperties": false
+}
