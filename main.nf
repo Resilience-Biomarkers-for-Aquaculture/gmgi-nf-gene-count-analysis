@@ -15,14 +15,14 @@ workflow {
 
 process process_script {
     input:
-    path gene_counts_file from channel.of(params.gene_counts)
-    path metadata_file from channel.of(params.metadata)
+    path gene_counts_file from Channel.value(params.gene_counts)
+    path metadata_file from Channel.value(params.metadata)
     val output_dir from params.output_dir
     val low_expression_threshold from params.low_expression_threshold
     val n_repeats from params.n_repeats
 
     output:
-    path "${output_dir}/*" into results_channel
+    path("${output_dir}/*") into results_channel
 
     script:
     """
@@ -34,3 +34,4 @@ process process_script {
         --n_repeats ${n_repeats}
     """
 }
+
