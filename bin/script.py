@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import matplotlib.pyplot as plt
