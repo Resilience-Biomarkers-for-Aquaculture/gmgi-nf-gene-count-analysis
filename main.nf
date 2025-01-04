@@ -29,7 +29,7 @@ process process_script {
 
     script:
     """
-    python script.py \
+    script.py \
         --gene_counts ${gene_counts_file} \
         --metadata ${metadata_file} \
         --output_dir ${output_dir} \
