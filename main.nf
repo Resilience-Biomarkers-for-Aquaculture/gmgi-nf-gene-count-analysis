@@ -9,20 +9,21 @@ params.low_expression_threshold = 10
 params.n_repeats = 10
 
 workflow {
-    main:
-    process_script(params.gene_counts, params.metadata, params.output_dir, params.low_expression_threshold, params.n_repeats)
+    def gene_counts_file = Channel.fromPath(params.gene_counts)
+    def metadata_file = Channel.fromPath(params.metadata)
+    process_script(gene_counts_file, metadata_file, params.output_dir, params.low_expression_threshold, params.n_repeats)
 }
 
 process process_script {
     input:
-    path gene_counts_file from Channel.value(params.gene_counts)
-    path metadata_file from Channel.value(params.metadata)
-    val output_dir from params.output_dir
-    val low_expression_threshold from params.low_expression_threshold
-    val n_repeats from params.n_repeats
+        path gene_counts_file
+        path metadata_file
+        val output_dir
+        val low_expression_threshold
+        val n_repeats
 
     output:
-    path("${output_dir}/*") into results_channel
+        path("${output_dir}/*")
 
     script:
     """
