@@ -9,13 +9,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 import matplotlib
+import seaborn as sns
 
 matplotlib.use('Agg')
 
 import io
 import boto3
 from botocore.exceptions import NoCredentialsError
-import matplotlib.pyplot as plt
 
 def save_figure(fig, path, format='png', **kwargs):
     """
@@ -106,6 +106,28 @@ sorted_samples = metadata_sorted['sample']
 # Subset and reorder the heatmap data to match the sorted samples
 top_genes_data_sorted = top_genes_data[sorted_samples]
 
+# Create heatmap with samples grouped by thermal resilience and day
+# Create custom labels for the x-axis showing both thermal resilience and day
+x_labels = [
+    f"{metadata_sorted.loc[metadata_sorted['sample'] == sample, 'thermal.tolerance'].values[0]}-Day{metadata_sorted.loc[metadata_sorted['sample'] == sample, 'day'].values[0]}"
+    for sample in sorted_samples
+]
+
+# Create heatmap with labeled groupings
+plt.figure(figsize=(16, 10))
+sns.heatmap(
+    top_genes_data_sorted, 
+    cmap="viridis", 
+    yticklabels=False, 
+    xticklabels=x_labels, 
+    cbar_kws={"label": "Log2(CPM + 1)"}
+)
+plt.title("Heatmap of Top 50 Most Variable Genes (Grouped by Thermal Resilience and Day)")
+plt.xlabel("Samples (Resilience-Day)")
+plt.ylabel("Genes")
+plt.xticks(rotation=90, fontsize=8)
+save_figure(plt, f"{output_dir}/heatmap_top_50_variable_genes.png")
+
 # Calculate mutual information for subsets of 10 genes
 sample_metadata = metadata.set_index('sample')
 expression_data = top_genes_data_sorted.T.values
@@ -132,7 +154,9 @@ mutual_info_results = pd.DataFrame({
 mutual_info_results.to_csv(f"{output_dir}/mutual_information_results.csv", index=False)
 
 # PCA Plot for Top 10 Genes
+# Select the top genes based on averaged mutual information scores
 top_genes_to_visualize = mutual_info_results.iloc[:10]['Gene']
+top_genes_data = log_cpm.loc[top_genes_to_visualize]
 scaled_top_10_data = StandardScaler().fit_transform(top_genes_data.T)  # Transpose
 pca_top_10 = PCA(n_components=2).fit_transform(scaled_top_10_data)
 plt.figure(figsize=(12, 10))
@@ -154,5 +178,25 @@ legend_handles = [
 ]
 plt.legend(handles=legend_handles, title="Thermal Tolerance")
 save_figure(plt, f"{output_dir}/PCA_top_10_mutual_info_genes.png")
+
+
+# Subset and reorder the heatmap data to match the sorted samples
+top_10_data_mi_sorted = top_genes_data[sorted_samples]
+
+# Create heatmap with grouped samples
+plt.figure(figsize=(12, 8))
+sns.heatmap(
+    top_10_data_mi_sorted,
+    cmap="viridis",
+    xticklabels=sorted_samples,
+    yticklabels=top_genes_to_visualize,
+    cbar_kws={"label": "Log2(CPM + 1)"}
+)
+plt.title("Heatmap of Top 10 Genes with Highest Mutual Information (Grouped by Thermal Tolerance and Day)")
+plt.xlabel("Samples (Grouped by Resilience and Day)")
+plt.ylabel("Genes")
+plt.xticks(rotation=90, fontsize=8)
+save_figure(plt, f"{output_dir}/heatmap_top_10_mutual_info_genes.png")
+
 
 # Additional plots and outputs can follow a similar pattern.
