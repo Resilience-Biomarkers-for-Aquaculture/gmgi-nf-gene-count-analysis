@@ -17,6 +17,9 @@ workflow {
 }
 
 process process_script {
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    maxRetries 1
+
     input:
         path gene_counts_file
         path metadata_file

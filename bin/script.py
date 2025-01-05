@@ -12,6 +12,54 @@ import matplotlib
 
 matplotlib.use('Agg')
 
+import io
+import boto3
+from botocore.exceptions import NoCredentialsError
+import matplotlib.pyplot as plt
+
+def save_figure(fig, path, format='png', **kwargs):
+    """
+    Save a matplotlib figure to a local file or an S3 bucket using in-memory storage.
+
+    Parameters:
+        fig (matplotlib.figure.Figure): The matplotlib figure to save.
+        path (str): The file path or S3 bucket path (e.g., 's3://bucket-name/key-name').
+        format (str): The format of the file (e.g., 'png', 'jpg', 'pdf').
+        **kwargs: Additional keyword arguments passed to plt.savefig().
+    """
+    if path.startswith("s3://"):
+        # Parse the S3 bucket and key
+        s3_path = path.replace("s3://", "").split("/", 1)
+        if len(s3_path) != 2:
+            raise ValueError("Invalid S3 path. Format should be 's3://bucket-name/key-name'.")
+        bucket_name, key_name = s3_path
+
+        # Save the figure to an in-memory buffer
+        buffer = io.BytesIO()
+        try:
+            fig.savefig(buffer, format=format, **kwargs)
+            buffer.seek(0)  # Reset the buffer's pointer to the beginning
+
+            # Upload the buffer content to S3
+            s3_client = boto3.client('s3')
+            s3_client.upload_fileobj(buffer, bucket_name, key_name)
+
+            print(f"Figure saved to S3 at {path}")
+        except NoCredentialsError:
+            raise NoCredentialsError("AWS credentials not found. Please configure your AWS environment.")
+        except Exception as e:
+            raise Exception(f"Failed to save figure to S3: {e}")
+        finally:
+            buffer.close()
+    else:
+        # Save to the local filesystem
+        try:
+            fig.savefig(path, format=format, **kwargs)
+            print(f"Figure saved locally at {path}")
+        except Exception as e:
+            raise Exception(f"Failed to save figure locally: {e}")
+
+
 # Parse arguments
 parser = argparse.ArgumentParser(description="Process gene counts and metadata for PCA and LDA analysis.")
 parser.add_argument('--gene_counts', required=True, help="Path to the gene count matrix file.")
@@ -105,6 +153,6 @@ legend_handles = [
                markersize=10, label='Susceptible')
 ]
 plt.legend(handles=legend_handles, title="Thermal Tolerance")
-plt.savefig(f"{output_dir}/PCA_top_10_mutual_info_genes.png")
+save_figure(plt, f"{output_dir}/PCA_top_10_mutual_info_genes.png")
 
 # Additional plots and outputs can follow a similar pattern.
