@@ -29,9 +29,6 @@ process process_script {
         val low_expression_threshold
         val n_repeats
 
-    output:
-        path("${output_dir}/*")
-
     script:
     """
     script.py \
