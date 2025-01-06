@@ -30,7 +30,7 @@ process process_script {
         val n_repeats
 
     output:
-        path("${output_dir}*")
+        path("${output_dir}/*")
 
     script:
     """
