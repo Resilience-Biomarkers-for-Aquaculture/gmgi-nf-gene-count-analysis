@@ -2,6 +2,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+import os
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
@@ -126,7 +127,7 @@ plt.title("Heatmap of Top 50 Most Variable Genes (Grouped by Thermal Resilience 
 plt.xlabel("Samples (Resilience-Day)")
 plt.ylabel("Genes")
 plt.xticks(rotation=90, fontsize=8)
-save_figure(plt, f"{output_dir}/heatmap_top_50_variable_genes.png")
+save_figure(plt, os.path.join(output_dir, "heatmap_top_50_variable_genes.png"))
 
 # Calculate mutual information for subsets of 10 genes
 sample_metadata = metadata.set_index('sample')
@@ -151,7 +152,7 @@ mutual_info_results = pd.DataFrame({
     'Mutual_Information': avg_mi_scores
 }).sort_values(by='Mutual_Information', ascending=False)
 
-mutual_info_results.to_csv(f"{output_dir}/mutual_information_results.csv", index=False)
+mutual_info_results.to_csv(os.path.join(output_dir,"mutual_information_results.csv"), index=False)
 
 # PCA Plot for Top 10 Genes
 # Select the top genes based on averaged mutual information scores
@@ -177,7 +178,7 @@ legend_handles = [
                markersize=10, label='Susceptible')
 ]
 plt.legend(handles=legend_handles, title="Thermal Tolerance")
-save_figure(plt, f"{output_dir}/PCA_top_10_mutual_info_genes.png")
+save_figure(plt, os.path.join(output_dir, "PCA_top_10_mutual_info_genes.png"))
 
 
 # Subset and reorder the heatmap data to match the sorted samples
@@ -196,7 +197,7 @@ plt.title("Heatmap of Top 10 Genes with Highest Mutual Information (Grouped by T
 plt.xlabel("Samples (Grouped by Resilience and Day)")
 plt.ylabel("Genes")
 plt.xticks(rotation=90, fontsize=8)
-save_figure(plt, f"{output_dir}/heatmap_top_10_mutual_info_genes.png")
+save_figure(plt, os.path.join(output_dir, "heatmap_top_10_mutual_info_genes.png"))
 
 
 # Additional plots and outputs can follow a similar pattern.
