@@ -13,7 +13,9 @@ workflow {
     main:
     def gene_counts_file = Channel.fromPath(params.gene_counts)
     def metadata_file = Channel.fromPath(params.metadata)
-    process_script(gene_counts_file, metadata_file, params.output_dir, params.low_expression_threshold, params.n_repeats)
+    // Remove any trailing slash(es) from the output directory path
+    def output_dir = params.output_dir.replaceAll(/\/+$/, '')
+    process_script(gene_counts_file, metadata_file, output_dir, params.low_expression_threshold, params.n_repeats)
 }
 
 process process_script {
@@ -28,7 +30,7 @@ process process_script {
         val n_repeats
 
     output:
-        path("${output_dir}/*")
+        path("${output_dir}*")
 
     script:
     """
