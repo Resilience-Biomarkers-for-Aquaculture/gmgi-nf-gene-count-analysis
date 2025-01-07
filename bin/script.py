@@ -154,11 +154,16 @@ mutual_info_results = pd.DataFrame({
 
 mutual_info_results.to_csv(os.path.join(output_dir,"mutual_information_results.csv"), index=False)
 
+top_10_genes_mi = mutual_info_results.iloc[:10]['Gene']
+top_10_data_mi = log_cpm.loc[top_10_genes_mi]
+
+# Reorder samples based on metadata (optional)
+top_10_data_mi_sorted = top_10_data_mi[sorted_samples]
+
 # PCA Plot for Top 10 Genes
 # Select the top genes based on averaged mutual information scores
-top_genes_to_visualize = mutual_info_results.iloc[:10]['Gene']
-top_genes_data = log_cpm.loc[top_genes_to_visualize]
-scaled_top_10_data = StandardScaler().fit_transform(top_genes_data.T)  # Transpose
+
+scaled_top_10_data = StandardScaler().fit_transform(top_10_data_mi.T)  # Transpose
 pca_top_10 = PCA(n_components=2).fit_transform(scaled_top_10_data)
 plt.figure(figsize=(12, 10))
 color_map = {'resistant': 'blue', 'susceptible': 'red'}
@@ -181,16 +186,13 @@ plt.legend(handles=legend_handles, title="Thermal Tolerance")
 save_figure(plt, os.path.join(output_dir, "PCA_top_10_mutual_info_genes.png"))
 
 
-# Subset and reorder the heatmap data to match the sorted samples
-top_10_data_mi_sorted = top_genes_data[sorted_samples]
-
 # Create heatmap with grouped samples
 plt.figure(figsize=(12, 8))
 sns.heatmap(
     top_10_data_mi_sorted,
     cmap="viridis",
     xticklabels=sorted_samples,
-    yticklabels=top_genes_to_visualize,
+    yticklabels=top_10_genes_mi,
     cbar_kws={"label": "Log2(CPM + 1)"}
 )
 plt.title("Heatmap of Top 10 Genes with Highest Mutual Information (Grouped by Thermal Tolerance and Day)")
@@ -199,5 +201,20 @@ plt.ylabel("Genes")
 plt.xticks(rotation=90, fontsize=8)
 save_figure(plt, os.path.join(output_dir, "heatmap_top_10_mutual_info_genes.png"))
 
+#---
+
+# Create heatmap with hierarchical clustering
+plt.figure(figsize=(12, 10))
+sns.clustermap(
+    top_10_data_mi_sorted,
+    cmap="viridis",
+    metric="euclidean",
+    method="average",
+    col_cluster=True,  # Cluster samples
+    row_cluster=True,  # Cluster genes
+    cbar_kws={"label": "Log2(CPM + 1)"}
+)
+plt.title("Hierarchical Clustering Heatmap of Top 10 Mutual Information Genes")
+save_figure(plt, os.path.join(output_dir, "heatmap_hierarchical_top_10_mutual_info_genes.png"))
 
 # Additional plots and outputs can follow a similar pattern.
