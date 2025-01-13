@@ -24,6 +24,7 @@ This repository contains a Nextflow pipeline for analyzing gene count data and m
 - `gene_counts`: Path to the gene count matrix.
 - `metadata`: Path to the metadata file.
 - `output_dir`: S3 directory for results.
+- `mutual_information_threshold`: Consider the top N genes with respect to mutual information scores.
 - `low_expression_threshold`: Threshold for filtering low-expression genes.
 - `n_repeats`: Number of repetitions for mutual information calculation.
 

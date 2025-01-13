@@ -22,6 +22,12 @@
             "format": "file-path",
             "description": "Directory to save output files (S3 or local path)."
         },
+        "mutual_information_threshold": {
+            "type": "integer",
+            "description": "Consider the genes among the top N mutual information scores.",
+            "default": 10,
+            "minimum": 5
+        },
         "low_expression_threshold": {
             "type": "integer",
             "description": "Threshold for filtering low-expression genes.",

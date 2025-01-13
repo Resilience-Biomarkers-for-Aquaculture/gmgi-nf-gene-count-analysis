@@ -66,6 +66,7 @@ parser = argparse.ArgumentParser(description="Process gene counts and metadata f
 parser.add_argument('--gene_counts', required=True, help="Path to the gene count matrix file.")
 parser.add_argument('--metadata', required=True, help="Path to the metadata file.")
 parser.add_argument('--output_dir', required=True, help="Directory to save output files.")
+parser.add_argument('--mutual_information_threshold', type=int, default=10, help="Top N highest mutual information genes. Default is 10.")
 parser.add_argument('--low_expression_threshold', type=int, default=10, help="Threshold for filtering low-expression genes. Default is 10.")
 parser.add_argument('--n_repeats', type=int, default=10, help="Number of repetitions for mutual information calculation. Default is 10.")
 args = parser.parse_args()
@@ -73,6 +74,7 @@ args = parser.parse_args()
 gene_counts_path = args.gene_counts
 metadata_path = args.metadata
 output_dir = args.output_dir
+mutual_information_threshold = args.mutual_information_threshold
 low_expression_threshold = args.low_expression_threshold
 n_repeats = args.n_repeats
 
@@ -129,7 +131,7 @@ plt.ylabel("Genes")
 plt.xticks(rotation=90, fontsize=8)
 save_figure(plt, os.path.join(output_dir, "heatmap_top_50_variable_genes.png"))
 
-# Calculate mutual information for subsets of 10 genes
+# Calculate mutual information
 sample_metadata = metadata.set_index('sample')
 expression_data = top_genes_data_sorted.T.values
 labels_resilience_day = metadata_sorted[['thermal.tolerance', 'day']]
@@ -154,25 +156,25 @@ mutual_info_results = pd.DataFrame({
 
 mutual_info_results.to_csv(os.path.join(output_dir,"mutual_information_results.csv"), index=False)
 
-top_10_genes_mi = mutual_info_results.iloc[:10]['Gene']
-top_10_data_mi = log_cpm.loc[top_10_genes_mi]
+top_genes_mi = mutual_info_results.iloc[:mutual_information_threshold]['Gene']
+top_data_mi = log_cpm.loc[top_genes_mi]
 
 # Reorder samples based on metadata (optional)
-top_10_data_mi_sorted = top_10_data_mi[sorted_samples]
+top_data_mi_sorted = top_data_mi[sorted_samples]
 
 # PCA Plot for Top 10 Genes
 # Select the top genes based on averaged mutual information scores
 
-scaled_top_10_data = StandardScaler().fit_transform(top_10_data_mi.T)  # Transpose
-pca_top_10 = PCA(n_components=2).fit_transform(scaled_top_10_data)
+scaled_top_mi_data = StandardScaler().fit_transform(top_data_mi.T)  # Transpose
+pca_top_mi = PCA(n_components=2).fit_transform(scaled_top_mi_data)
 plt.figure(figsize=(12, 10))
 color_map = {'resistant': 'blue', 'susceptible': 'red'}
 colors = [color_map[sample_metadata.loc[sample, 'thermal.tolerance']] for sample in filtered_gene_counts_high_expression.columns]
 days = sample_metadata.loc[filtered_gene_counts_high_expression.columns, 'day'].tolist()
 for i, sample in enumerate(filtered_gene_counts_high_expression.columns):
-    plt.scatter(pca_top_10[i, 0], pca_top_10[i, 1], color=colors[i], s=50, alpha=0.7)
-    plt.text(pca_top_10[i, 0], pca_top_10[i, 1], f"Day {days[i]}", fontsize=8, ha='right')
-plt.title("PCA of Samples Based on Top 10 Genes")
+    plt.scatter(pca_top_mi[i, 0], pca_top_mi[i, 1], color=colors[i], s=50, alpha=0.7)
+    plt.text(pca_top_mi[i, 0], pca_top_mi[i, 1], f"Day {days[i]}", fontsize=8, ha='right')
+plt.title(f"PCA of Samples Based on Top {mutual_information_threshold} Genes")
 plt.xlabel("PC1")
 plt.ylabel("PC2")
 plt.grid(True)
@@ -183,30 +185,30 @@ legend_handles = [
                markersize=10, label='Susceptible')
 ]
 plt.legend(handles=legend_handles, title="Thermal Tolerance")
-save_figure(plt, os.path.join(output_dir, "PCA_top_10_mutual_info_genes.png"))
+save_figure(plt, os.path.join(output_dir, f"PCA_top_{mutual_information_threshold}_mutual_info_genes.png"))
 
 
 # Create heatmap with grouped samples
 plt.figure(figsize=(12, 8))
 sns.heatmap(
-    top_10_data_mi_sorted,
+    top_data_mi_sorted,
     cmap="viridis",
     xticklabels=sorted_samples,
-    yticklabels=top_10_genes_mi,
+    yticklabels=top_genes_mi,
     cbar_kws={"label": "Log2(CPM + 1)"}
 )
-plt.title("Heatmap of Top 10 Genes with Highest Mutual Information (Grouped by Thermal Tolerance and Day)")
+plt.title(f"Heatmap of Top {mutual_information_threshold} Genes with Highest Mutual Information (Grouped by Thermal Tolerance and Day)")
 plt.xlabel("Samples (Grouped by Resilience and Day)")
 plt.ylabel("Genes")
 plt.xticks(rotation=90, fontsize=8)
-save_figure(plt, os.path.join(output_dir, "heatmap_top_10_mutual_info_genes.png"))
+save_figure(plt, os.path.join(output_dir, f"heatmap_top_{mutual_information_threshold}_mutual_info_genes.png"))
 
 #---
 
 # Create heatmap with hierarchical clustering
 plt.figure(figsize=(12, 10))
 sns.clustermap(
-    top_10_data_mi_sorted,
+    top_data_mi_sorted,
     cmap="viridis",
     metric="euclidean",
     method="average",
@@ -214,7 +216,7 @@ sns.clustermap(
     row_cluster=True,  # Cluster genes
     cbar_kws={"label": "Log2(CPM + 1)"}
 )
-plt.title("Hierarchical Clustering Heatmap of Top 10 Mutual Information Genes")
-save_figure(plt, os.path.join(output_dir, "heatmap_hierarchical_top_10_mutual_info_genes.png"))
+plt.title(f"Hierarchical Clustering Heatmap of Top {mutual_information_threshold} Mutual Information Genes")
+save_figure(plt, os.path.join(output_dir, f"heatmap_hierarchical_top_{mutual_information_threshold}_mutual_info_genes.png"))
 
 # Additional plots and outputs can follow a similar pattern.
